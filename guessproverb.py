@@ -2,9 +2,18 @@ import random
 import collections
  
 def load_proverbs(file_name):
-    with open(file_name, 'r') as file:
-        proverbs = [line.strip() for line in file.readlines()]
-    return proverbs
+    try:
+        with open(file_name, 'r') as file:
+            lines = file.readlines()
+            if lines:
+                proverbs = [line.strip() for line in lines]
+            else:
+                print('Proverbs file is empty.')    
+                return None
+        return proverbs
+    except:
+        print("Proverbs file not found.")
+        return None  
  
 def get_proverb(proverbs):
     return random.choice(proverbs)
@@ -49,38 +58,40 @@ def reveal_char(proverb, masked):
  
  
 # Return number of wrongs and reveals
-def guess_input(proverb, masked, indicies, guesses_left):
-    inp = input(">> Guess: ")
+def guess_input(proverb, masked, indicies, guesses_left, user_input, misses):
     wrong_guesses = 0
-    user_guess = inp.lower().split()
+    user_guess = user_input.lower().split()
     reveals = 0
+    print_misses = False
  
     for guess in user_guess:
         if guess in indicies:
             print("Good guess!", '"' + guess + '"', "is in the proverb.")
             reveal_words(guess, masked, indicies)
         else:
-            print("Misses: " + guess )
+            misses.append(guess)
+            print_misses = True
             wrong_guesses += 1
             guesses_left -= 1
             reveal_char(proverb, masked)
             if guesses_left < 0:
                 break
-    if len(inp) == 0:
+    if print_misses:
+        print(f"Misses: {misses}")
+    if len(user_input) == 0:
         print("No guess:")
         wrong_guesses += 1
         guesses_left -= 1
         reveal_char(proverb, masked)
- 
     return wrong_guesses
  
-def build_word_indicies(proverb, raw_words):
+def build_word_indicies(proverb):
     lower_proverb = proverb.lower()
     indicies = collections.defaultdict(list)
  
     current_word = ""
     start_index = None
-    for i, c in enumerate(proverb + " "):
+    for i, c in enumerate(lower_proverb + " "):
         if c.isalpha() or c == "'":
             if start_index is None:
                 start_index = i
@@ -102,18 +113,19 @@ def printStats(rounds_played, rounds_won, total_reveal, total_words):
     print(f"Average letter reveal: {average_letter_reveal}%")
  
 def main():
-    proverbs = load_proverbs('proverbs.txt')
+    proverbs = load_proverbs('proverbs.txt'),
+    misses = []
     rounds_played = 0
     rounds_won = 0
     total_reveal = 0
     total_words = 0
     while True:
         rounds_played += 1
-        proverb = get_proverb(proverbs)
+        proverb = "Actions speak louder than words."
  
         masked = [c.isalpha() for c in proverb]
         raw_words = get_raw_lower_words(proverb, masked)
-        indicies = build_word_indicies(proverb, raw_words)
+        indicies = build_word_indicies(proverb)
  
         wrong_guess = 0
         max_guess = len(raw_words)
@@ -122,7 +134,8 @@ def main():
         while wrong_guess < max_guess and any(masked):
             print(get_current_masked(proverb, masked))
             print("letter reveals : %d / %d" % (wrong_guess, max_guess))
-            wrong_guess += guess_input(proverb, masked, indicies, max_guess - wrong_guess + 1)
+            user_input = input(">> Guess: ")
+            wrong_guess += guess_input(proverb, masked, indicies, max_guess - wrong_guess + 1, user_input, misses)
  
         if wrong_guess >= max_guess:
             print("Sorry, you have lost this round.")
