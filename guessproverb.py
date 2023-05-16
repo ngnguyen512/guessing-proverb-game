@@ -12,7 +12,7 @@ def get_proverb(proverbs):
 def get_current_masked(proverb, masked):
     ret = ""
     for c, is_masked in zip(proverb, masked):
-        ret += '-' if is_masked else c
+        ret += '~' if is_masked else c
     return ret
  
 def get_raw_lower_words(proverbs, masked):
@@ -135,8 +135,11 @@ def main():
         print("The proverb is:", get_current_masked(proverb, masked))
         printStats(rounds_played, rounds_won, total_reveal, total_words)
         play_again = input("Play again? (Y/N) ")
-        if play_again.lower() != 'y':
-            print("ANOTHER TIME")
+        if play_again.lower() != 'y' and play_again.lower() != 'n':
+            print("Invalid Input.Try again")
+            play_again = input("Play again? (Y/N) ")
+        elif play_again.lower() != 'y' and play_again.lower() == 'n':
+            print("Another time")
             break
  
 if __name__ == "__main__":
